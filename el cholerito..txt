@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>EL CHOLERITO</title>
+<style>
+  body {
+    background-color: #1b5e20; /* Verde oscuro */
+    color: white;
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    text-align: center;
+  }
+  header { padding: 20px; }
+  h1 { font-size: 3em; margin: 0; }
+  h2 { font-size: 1em; font-weight: normal; margin-top: 5px; }
+
+  .productos {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
+    padding: 20px;
+  }
+  .producto {
+    background: rgba(255,255,255,0.1);
+    padding: 15px;
+    border-radius: 10px;
+    width: 200px;
+  }
+  .producto img {
+    border-radius: 10px;
+  }
+  .producto button {
+    background: gold;
+    border: none;
+    padding: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 10px;
+    font-weight: bold;
+  }
+
+  /* Ventana de compra */
+  .modal {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.7);
+    justify-content: center;
+    align-items: center;
+  }
+  .modal-content {
+    background: white;
+    color: black;
+    padding: 20px;
+    border-radius: 10px;
+    width: 300px;
+    text-align: left;
+  }
+  .modal-content input {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+  }
+  .close { float: right; cursor: pointer; font-weight: bold; color: red; }
+
+  /* Chat bot */
+  #chatBot {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: #fff;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 30px;
+    cursor: pointer;
+    animation: blink 1s infinite alternate;
+  }
+  @keyframes blink { from { opacity: 1; } to { opacity: 0.5; } }
+
+  #chatWindow {
+    display: none;            /* Se muestra al abrirChat() */
+    position: fixed;
+    bottom: 90px;
+    right: 20px;
+    background: white;
+    width: 250px;
+    height: 320px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px black;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  #chatHeader {
+    background: green;
+    color: white;
+    padding: 5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  #chatMessages {
+    flex: 1;
+    padding: 10px;
+    font-size: 14px;
+    overflow-y: auto;
+    color: black; /* Texto negro */
+  }
+  #chatInput { display: flex; border-top: 1px solid #ccc; }
+  #chatInput input { flex: 1; padding: 5px; border: none; outline: none; }
+  #chatInput button { background: green; color: white; border: none; padding: 5px 10px; cursor: pointer; }
+</style>
+</head>
+<body>
+
+<img src="imagenes/milogo.jpg" alt="Mi Logo"
+     style="width:3cm; height:3cm; border-radius:50%; object-fit:cover; position:absolute; top:25px; left:50px;">
+
+<header>
+  <h1>EL CHOLERITO</h1>
+  <h2>LA MEJOR HOJA DE COCA DE TODO EL CHACO</h2>
+</header>
+
+<!-- Carrusel horizontal con flechas -->
+<div class="carrusel-container">
+  <button class="carrusel-btn izquierda" onclick="moverCarrusel(-1)">⬅</button>
+  
+  <div class="carrusel" id="carrusel">
+    <div class="slide">
+      <img src="imagenes/imagen1.jpg" alt="Imagen 1">
+    </div>
+    <div class="slide">
+      <img src="imagenes/imagen2.jpg" alt="Imagen 2">
+    </div>
+  </div>
+  
+  <button class="carrusel-btn derecha" onclick="moverCarrusel(1)">➡</button>
+</div>
+
+<style>
+  .carrusel-container {
+    width: 100%;
+    max-width: 800px;       /* ancho máximo */
+    aspect-ratio: 16 / 9;   /* horizontal */
+    margin: auto;
+    overflow: hidden;
+    border-radius: 10px;    /* opcional */
+    position: relative;
+  }
+
+  .carrusel {
+    display: flex;
+    transition: transform 0.6s ease-in-out;
+    width: 100%; /* porque son 2 imágenes */
+    height: 100%;
+  }
+
+  .slide {
+    width: 100%;
+    height: 100%;
+    flex-shrink: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .slide img {
+    width: 100%;
+    height: auto%;
+    object-fit: contain;   /* 👈 imagen completa */
+  }
+
+  .carrusel-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(0,0,0,0.5);
+    color: white;
+    border: none;
+    padding: 12px;
+    cursor: pointer;
+    z-index: 10;
+    font-size: 22px;
+    border-radius: 50%;
+  }
+  .carrusel-btn.izquierda { left: 10px; }
+  .carrusel-btn.derecha { right: 10px; }
+</style>
+
+<script>
+  let indice = 0;
+  const carrusel = document.getElementById("carrusel");
+  const total = carrusel.children.length;
+
+  function mostrarImagen(index) {
+    if (index < 0) indice = total - 1;
+    else if (index >= total) indice = 0;
+    else indice = index;
+
+    carrusel.style.transform = `translateX(${-indice * 100}%)`;
+  }
+
+  function moverCarrusel(direccion) {
+    mostrarImagen(indice + direccion);
+  }
+
+  // Cambio automático cada 5 segundos
+  setInterval(() => {
+    mostrarImagen(indice + 1);
+  }, 5000);
+</script>
+
+
+
+<div class="productos">
+
+  <div class="producto">
+    <img src="imagenes/duermepaloma.jpg" alt="DUERME PALOMA" style="width:5cm; height:7cm;" />
+    18b.s💸
+    <h3>DUERME PALOMA</h3>
+    <button onclick="abrirCompra('DUERME PALOMA')">Comprar</button>
+  </div>
+  <div class="producto">
+    <img src="imagenes/levantapaloma.jpg" alt="LEVANTA PALOMA" style="width:5cm; height:7cm;" />
+     18b.s💸
+    <h3>LEVANTA PALOMA</h3>
+    <button onclick="abrirCompra('LEVANTA PALOMA')">Comprar</button>
+  </div>
+  <div class="producto">
+    <img src="imagenes/chicle.jpg" alt="CHICLE" style="width:5cm; height:7cm;" />
+    18b.s💸
+    <h3>CHICLE</h3>
+    <button onclick="abrirCompra('CHICLE')">Comprar</button>
+  </div>
+  <div class="producto">
+    <img src="imagenes/rebull.jpg" alt="RED BULL" style="width:5cm; height:7cm;" />
+    18b.s💸
+    <h3>RED BULL</h3>
+    <button onclick="abrirCompra('RED BULL')">Comprar</button>
+  </div>
+   <div class="producto">
+    <img src="imagenes/maracuya.jpg" alt="MARACUYA" style="width:5cm; height:7cm;" />
+    18b.s💸
+    <h3>MARACUYA</h3>
+    <button onclick="abrirCompra('MARACUYA')">Comprar</button>
+  </div>
+  <div class="producto">
+    <img src="imagenes/elchango.jpg" alt="CHANGO" style="width:5cm; height:7cm;" />
+    18b.s💸
+    <h3>CHANGO</h3>
+    <button onclick="abrirCompra('CHANGO')">Comprar</button>
+  </div>
+  <div class="producto">
+    <img src="imagenes/pitufibolo.jpg" alt="RED BULL" style="width:5cm; height:7cm;" />
+     18b.s💸
+    <h3>RED BULL</h3>
+    <button onclick="abrirCompra('PITIFIBOLO')">Comprar</button>
+  </div>
+  <div class="producto">
+    <img src="imagenes/elcholero.jpg" alt="EL CHOLERO" style="width:5cm; height:7cm;" />
+    18b.s💸
+    <h3>MARACUYA</h3>
+    <button onclick="abrirCompra('EL CHOLERO')">Comprar</button>
+  </div>
+  <div class="producto">
+    <img src="imagenes/elmisionero.jpg" alt="EL MISIONERO" style="width:5cm; height:7cm;" />
+     18b.s💸
+    <h3>CHANGO</h3>
+    <button onclick="abrirCompra('CHANGO')">Comprar</button>
+  </div>
+
+</div>
+
+<!-- Modal de compra -->
+<div id="compraModal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="cerrarCompra()">&times;</span>
+    <h3>Formulario de Compra</h3>
+    <input type="text" id="nombre" placeholder="Nombre completo" />
+    <input type="text" id="telefono" placeholder="Número de teléfono" />
+    <input type="text" id="ubicacion" placeholder="Ubicación" />
+    <button onclick="enviarWhatsApp()">HACER PEDIDO💲</button>
+  </div>
+</div>
+
+<!-- Chat Bot -->
+<div id="chatBot" onclick="abrirChat()">🍃</div>
+
+<div id="chatWindow">
+  <div id="chatHeader">
+    <span>Chat Bot</span>
+    <span class="close" onclick="cerrarChat()">✖</span>
+  </div>
+  <div id="chatMessages"></div>
+  <div id="chatInput">
+    <input type="text" id="userInput" placeholder="Escribe tu mensaje..." />
+    <button onclick="enviarMensaje()">Enviar</button>
+  </div>LL
+</div>
+
+<script>
+// Abrir/cerrar modal de ofertas
+function abrirOfertas() {
+  document.getElementById("ofertasModal").style.display = "flex";
+}
+function cerrarOfertas() {
+  document.getElementById("ofertasModal").style.display = "none";
+}
+
+// Abrir compra desde ofertas
+function abrirCompraOfertas(producto) {
+  const nombre = prompt("Ingresa tu nombre completo:");
+  const telefono = prompt("Ingresa tu teléfono:");
+  const ubicacion = prompt("Ingresa tu ubicación:");
+
+  if (!nombre || !telefono || !ubicacion) {
+    alert("⚠ Por favor completa todos los campos.");
+    return;
+  }
+
+  const mensaje = `Hola, soy ${nombre}, mi número es ${telefono}, vivo en ${ubicacion}. Quiero comprar: ${producto}. Estoy listo para pagar por QR. 🌿💚`;
+  window.open(`https://wa.me/59169853189?text=${encodeURIComponent(mensaje)}`, "_blank");
+}
+
+(function () {
+  let productoSeleccionado = "";
+  let chatIniciado = false;
+
+  // ------- Modal de compra -------
+  window.abrirCompra = function (producto) {
+    productoSeleccionado = producto;
+    document.getElementById("compraModal").style.display = "flex";
+  };
+
+  window.cerrarCompra = function () {
+    document.getElementById("compraModal").style.display = "none";
+  };
+
+  window.enviarWhatsApp = function () {
+    const nombre = document.getElementById("nombre").value.trim();
+    const telefono = document.getElementById("telefono").value.trim();
+    const ubicacion = document.getElementById("ubicacion").value.trim();
+
+    if (!nombre || !telefono || !ubicacion) {
+      alert("⚠ Por favor casero completa todos los campos.");
+      return;
+    }
+
+    const mensaje = `Hola, soy ${nombre}, mi número es ${telefono}, vivo en ${ubicacion}. Quiero comprar: ${productoSeleccionado}. Estoy listo para pagar por QR. 🌿💚`;
+    window.open(`https://wa.me/59169853189?text=${encodeURIComponent(mensaje)}`, "_blank");
+  };
+
+  // ------- Chatbot -------
+  function quitarAcentos(str) {
+    return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  }
+
+  window.abrirChat = function () {
+    const chat = document.getElementById("chatWindow");
+    chat.style.display = "flex"; // Debe ser flex para respetar el layout
+    if (!chatIniciado) {
+      agregarMensaje("bot", "Hola 👋, soy tu asistente virtual. Pregúntame lo que quieras.");
+      chatIniciado = true;
+    }
+  };
+
+  window.cerrarChat = function () {
+    document.getElementById("chatWindow").style.display = "none";
+  };
+
+  window.enviarMensaje = function () {
+    const input = document.getElementById("userInput");
+    const mensaje = input.value.trim();
+    if (!mensaje) return;
+
+    agregarMensaje("usuario", mensaje);
+    responderBot(mensaje);
+    input.value = "";
+  };
+
+  function agregarMensaje(remitente, texto) {
+    const contenedor = document.getElementById("chatMessages");
+    const quien = remitente === "bot" ? "Bot" : "Tú";
+    contenedor.innerHTML += `<p><b>${quien}:</b> ${texto}</p>`;
+    contenedor.scrollTop = contenedor.scrollHeight;
+  }
+
+  function responderBot(texto) {
+    const pregunta = quitarAcentos(texto.toLowerCase());
+    let respuesta = "Lo siento, no entendí tu pregunta.";
+
+    if (pregunta.includes("precio") || pregunta.includes("cuanto") || pregunta.includes("cuánto")) {
+      respuesta = "Antes a 20bs ahora 18b,s , APROVECHA.";
+    } else if (pregunta.includes("ubicacion") || pregunta.includes("direccion") || pregunta.includes("direccion")) {
+      respuesta = "Estamos en el corazón del Chaco, listos para atenderte 💚.";
+    } else if (pregunta.includes("pago") || pregunta.includes("qr")) {
+      respuesta = "Aceptamos pagos por QR y en efectivo ✅.";
+    } else if (pregunta.includes("hola") || pregunta.includes("buenas")) {
+      respuesta = "¡Hola! ¿Cómo estás?";
+    } else if (pregunta.includes("que sabores tienes") || pregunta.includes("sabores")) {
+      respuesta = "Tenemos 9 variedades de hoja de coca fresca y del que usted guste🌿.";
+    } else if (pregunta.includes("donde se ubican") || pregunta.includes("ubicacion") || pregunta.includes("ubicacion")) {
+      respuesta = "nos entramos ubicados en la grampa🌿.";
+    } else if (pregunta.includes("que sabores") || pregunta.includes("sobores") || pregunta.includes("sabores")) {
+      respuesta = "¡Claro que sí! Hacemos envíos 🌿.";
+      } else if (pregunta.includes("hacen envios") || pregunta.includes("envios") || pregunta.includes("envíos")) {
+      respuesta = "¡Claro que sí! Hacemos envíos 🌿.";
+      } else if (pregunta.includes("el mejor sabor") || pregunta.includes("mejor ") || pregunta.includes("mejor")) {
+      respuesta = "¡ufff todos los sabores son buenisimos 🌿.";
+    }
+
+    setTimeout(function () {
+      agregarMensaje("bot", respuesta);
+    }, 500);
+  }
+
+  // Enviar con Enter
+  document.getElementById("userInput").addEventListener("keydown", function (e) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      enviarMensaje();
+    }
+  });
+})();
+</script>
+
+</body>
+</html>
+<head>
+    <meta charset="UTF-8">
+    <title>Mi página</title>
+    <style>
+        body {
+            background-image: url('imagenes/fondo.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+    </style>
+</head>
+ <!-- Redes sociales fijas abajo al cuentro -->
+<div style="
+  position:fixed; 
+  bottom:10px; 
+  left:5%; 
+  transform:none;
+  display:flex; 
+  gap:20px; 
+  z-index:1000;
+">
+  
+  <!-- TikTok -->
+  <a href="https://www.tiktok.com/@el.cholerito_la.grampa" target="_blank">
+    <img src="imagenes/tik.jpg" alt="TikTok"
+         style="width:2cm; height:2cm; border-radius:50%; object-fit:cover; cursor:pointer;">
+  </a>
+
+  <!-- Facebook -->
+  <a href="https://www.facebook.com/El cholerito YBA La Grampa" target="_blank">
+    <img src="imagenes/face.jpg" alt="Facebook"
+         style="width:2cm; height:2cm; border-radius:50%; object-fit:cover; cursor:pointer;">
+  </a>
+
+</div>
+
+</body>
+
